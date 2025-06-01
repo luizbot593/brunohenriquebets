@@ -1,43 +1,79 @@
 import telebot
+from flask import Flask
+from threading import Thread
 
-# 🔥 Token e ID já configurados:
-API_TOKEN = '7837896313:AAEADUEtM1SbTPF3GJqJbbZX-VFPWikhWKo'
-ID_DONO = 1559415861
+# 🔥 Dados sensíveis (pegos nas variáveis de ambiente da Render)
+import os
+TOKEN = os.getenv('TOKEN')
+ID_GRUPO = os.getenv('ID_GRUPO')
 
-bot = telebot.TeleBot(API_TOKEN)
+bot = telebot.TeleBot(TOKEN)
 
-# 📢 Mensagem de boas-vindas
+# ✅ FLASK - Mantém o bot online
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "✅ Bot está online e funcionando!"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+# 🔥 Comandos do bot
+
 @bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "🚀 Bem-vindo ao Bruno Henrique Bets!\n\n👉 Use /gratis para receber sinais gratuitos.\n👉 Use /premium para saber como acessar o grupo VIP.\n👉 Use /gestao para dicas de gestão de banca.\n\n🤑 Bora bater a meta!")
+def start(message):
+    bot.reply_to(message, "👋 Seja bem-vindo ao Bruno Henrique Bets! Use /menu para ver as opções.")
 
-# 🎯 Comando de sinais grátis
-@bot.message_handler(commands=['gratis'])
-def sinais_gratis(message):
-    bot.reply_to(message, "🔥 Sinais Grátis:\n\n✅ Futebol: +1.5 HT\n✅ Basquete: Handicap -3.5\n\n⚽🏀 Aproveite!")
+@bot.message_handler(commands=['menu'])
+def menu(message):
+    texto = """
+🏟️ *Menu Principal - Bruno Henrique Bets* 🏟️
 
-# 💎 Comando de premium
-@bot.message_handler(commands=['premium'])
-def premium(message):
-    bot.reply_to(message, "💎 Para acessar nosso grupo VIP com sinais exclusivos, entre em contato:\n👉 @seuuser\nOu clique no link: https://t.me/seugrupo\n\n🚀 Bora lucrar juntos!")
+🎯 /sinaisgratis - Receber sinais gratuitos
+💰 /planos - Ver planos premium
+📊 /gestao - Dicas de gestão de banca
+🤖 /suporte - Falar com o suporte
+"""
+    bot.send_message(message.chat.id, texto, parse_mode="Markdown")
 
-# 📊 Comando de gestão
+@bot.message_handler(commands=['sinaisgratis'])
+def sinaisgratis(message):
+    bot.reply_to(message, "🚀 Aguardando... Aqui você vai receber seus sinais gratuitos assim que estiverem disponíveis!")
+
+@bot.message_handler(commands=['planos'])
+def planos(message):
+    texto = """
+💎 *Planos Premium Bruno Henrique Bets* 💎
+
+- 🔥 *Mensal:* R$ XX
+- 🚀 *Trimestral:* R$ XX
+- 🏆 *Vitalício:* R$ XX
+
+Acesse nosso Instagram ou fale no /suporte para contratar!
+"""
+    bot.send_message(message.chat.id, texto, parse_mode="Markdown")
+
 @bot.message_handler(commands=['gestao'])
 def gestao(message):
-    bot.reply_to(message, "📊 Gestão de Banca:\n\n➡️ Use no máximo 3% por entrada.\n➡️ Nunca faça all-in.\n➡️ Foque no longo prazo.\n\n✅ Disciplina gera resultado!")
+    texto = """
+📊 *Gestão de Banca Recomendada* 📊
 
-# 🛠️ Comando secreto só para o dono enviar sinais personalizados
-@bot.message_handler(commands=['enviar'])
-def enviar(message):
-    if message.from_user.id == ID_DONO:
-        texto = message.text.split('/enviar ', 1)
-        if len(texto) > 1:
-            bot.send_message(message.chat.id, f"🚨 Novo Sinal:\n\n{texto[1]}")
-        else:
-            bot.reply_to(message, "⚠️ Envie no formato: /enviar SEU TEXTO AQUI")
-    else:
-        bot.reply_to(message, "❌ Você não tem permissão para usar esse comando.")
+- ✅ Use 1% a 3% da sua banca por entrada.
+- ⚠️ Nunca recupere perdas no impulso.
+- 🧠 Foque no longo prazo.
+"""
+    bot.send_message(message.chat.id, texto, parse_mode="Markdown")
 
-# 🚀 Rodando o bot
-print('🤖 Bot está funcionando...')
+@bot.message_handler(commands=['suporte'])
+def suporte(message):
+    bot.reply_to(message, "🆘 Fale conosco no Instagram: @seuinsta ou aqui mesmo no Telegram!")
+
+# ✅ Iniciar Bot + Flask
+keep_alive()
+print('🤖 BOT ONLINE...')
 bot.infinity_polling()
